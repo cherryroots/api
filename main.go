@@ -68,6 +68,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 		} else {
 			for _, note := range noteCache {
 				if note.Username == id {
@@ -80,11 +81,11 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
+					noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 					break
 				}
 			}
 		}
-		noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 
 		var match bool
 		for _, note := range notes {
@@ -99,9 +100,9 @@ func main() {
 			}
 		}
 		if !match {
-			saveURL := "No match for found"
+			saveURL := "No match for " + element[0]
 			noteURLs = append(noteURLs, saveURL)
-			log.Printf("No match for %s", element[0])
+			log.Printf("No match for found...")
 		}
 	}
 	err = os.WriteFile("output.txt", []byte(strings.Join(noteURLs, "\n")), 0644)
