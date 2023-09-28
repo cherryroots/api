@@ -20,6 +20,12 @@ type note struct {
 	URL string
 }
 
+// main is the entry point of the Go program.
+//
+// It reads the contents of a file called "input.txt" in the same directory.
+// Then, it searches for URLs in the content using a regular expression.
+// It retrieves the host and username from each URL and makes API calls to get the user ID, notes count, and user notes.
+// Finally, it saves the note URLs to a file called "output.txt".
 func main() {
 	// read from a file called input in the same directory
 	body, err := os.ReadFile("input.txt")
@@ -67,6 +73,16 @@ func main() {
 	}
 }
 
+// getUserID retrieves the user ID and notes count for a given username and host.
+//
+// Parameters:
+// - username: The username of the user.
+// - host: The host of the user.
+//
+// Returns:
+// - id: The user ID.
+// - notesCount: The count of notes for the user.
+// - error: The error that occurred during the API call.
 func getUserID(username string, host string) (string, int64, error) {
 	url := "https://blahaj.zone/api/users/show"
 	json := []byte(`{"username": "` + username + `", "host": "` + host + `"}`)
@@ -81,6 +97,15 @@ func getUserID(username string, host string) (string, int64, error) {
 	return id, notesCount, nil
 }
 
+// getUserNotes retrieves the notes of a user based on the provided user ID and the count of notes.
+//
+// Parameters:
+// - userid: a string representing the ID of the user.
+// - notesCount: an int64 representing the count of notes to retrieve.
+//
+// Returns:
+// - []note: an array of notes.
+// - error: an error if there was a problem retrieving the notes.
 func getUserNotes(userid string, notesCount int64) ([]note, error) {
 	// array of notes
 	var noteList = []note{}
@@ -123,6 +148,15 @@ func getUserNotes(userid string, notesCount int64) ([]note, error) {
 	return noteList, nil
 }
 
+// postAPI sends a POST request to the specified path with the provided data and returns the response body as a string.
+//
+// Parameters:
+// - path: the URL path to send the request to.
+// - data: the data to include in the request body.
+//
+// Returns:
+// - string: the response body as a string.
+// - error: any error that occurred during the request.
 func postAPI(path string, data string) (string, error) {
 	req, err := http.NewRequest("POST", path, strings.NewReader(string(data)))
 	if err != nil {
