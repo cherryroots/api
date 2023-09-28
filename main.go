@@ -30,6 +30,7 @@ func main() {
 
 	regex := regexp.MustCompile(`(?m)[<]?(https?:\/\/[^\s<>]+)[>]?\b`)
 	result := regex.FindAllStringSubmatch(example, -1)
+	noteURLs := []string{}
 	for _, element := range result {
 		log.Printf("URL: %s", element[0])
 		u, err := url.Parse(element[0])
@@ -53,10 +54,16 @@ func main() {
 			// check if note url matches example and print id and url
 			if strings.Contains(note.URL, element[0]) {
 				id = note.ID
-				noteurl := "https://blahaj.zone/notes/" + id
-				log.Printf("noteID: %s, url: %s", id, noteurl)
+				noteURL := "https://blahaj.zone/notes/" + id
+				saveURL := noteURL + " = " + element[0]
+				noteURLs = append(noteURLs, saveURL)
+				log.Printf("noteID: %s, url: %s", id, noteURL)
 			}
 		}
+	}
+	err = os.WriteFile("output.txt", []byte(strings.Join(noteURLs, "\n")), 0644)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
