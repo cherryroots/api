@@ -62,6 +62,7 @@ func main() {
 		var notes []note
 		// if noteCache is empty get notes
 		if len(noteCache) == 0 {
+			log.Print("Getting notes...")
 			notes, err = getUserNotes(id, notesCount)
 			if err != nil {
 				log.Fatal(err)
@@ -73,7 +74,7 @@ func main() {
 					notes = note.Notes
 					break
 				} else {
-					log.Print("Not in cache")
+					log.Print("Not in cache, getting notes...")
 					notes, err = getUserNotes(id, notesCount)
 					if err != nil {
 						log.Fatal(err)
@@ -84,6 +85,7 @@ func main() {
 		}
 		noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 
+		var match bool
 		for _, note := range notes {
 			// check if note url matches example and print id and url
 			if strings.Contains(note.URL, element[0]) {
@@ -91,8 +93,14 @@ func main() {
 				noteURL := "https://blahaj.zone/notes/" + id
 				saveURL := noteURL + " = " + element[0]
 				noteURLs = append(noteURLs, saveURL)
+				match = true
 				log.Printf("noteID: %s, url: %s", id, noteURL)
 			}
+		}
+		if !match {
+			saveURL := "No match for found"
+			noteURLs = append(noteURLs, saveURL)
+			log.Printf("No match for %s", element[0])
 		}
 	}
 	err = os.WriteFile("output.txt", []byte(strings.Join(noteURLs, "\n")), 0644)
