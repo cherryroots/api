@@ -20,6 +20,11 @@ type note struct {
 	URL string
 }
 
+type noteStore struct {
+	Username string
+	Notes    []note
+}
+
 // main is the entry point of the Go program.
 //
 // It reads the contents of a file called "input.txt" in the same directory.
@@ -36,6 +41,7 @@ func main() {
 
 	regex := regexp.MustCompile(`(?m)[<]?(https?:\/\/[^\s<>]+)[>]?\b`)
 	result := regex.FindAllStringSubmatch(example, -1)
+	noteCache := []noteStore{}
 	noteURLs := []string{}
 	for _, element := range result {
 		log.Printf("URL: %s", element[0])
@@ -52,10 +58,32 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Printf("userID: %s, notesCount: %d", id, notesCount)
-		notes, err := getUserNotes(id, notesCount)
-		if err != nil {
-			log.Fatal(err)
+
+		var notes []note
+		// if noteCache is empty get notes
+		if len(noteCache) == 0 {
+			notes, err = getUserNotes(id, notesCount)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			for _, note := range noteCache {
+				if note.Username == id {
+					log.Print("Found in cache")
+					notes = note.Notes
+					break
+				} else {
+					log.Print("Not in cache")
+					notes, err = getUserNotes(id, notesCount)
+					if err != nil {
+						log.Fatal(err)
+					}
+					break
+				}
+			}
 		}
+		noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
+
 		for _, note := range notes {
 			// check if note url matches example and print id and url
 			if strings.Contains(note.URL, element[0]) {
