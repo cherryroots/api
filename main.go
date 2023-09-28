@@ -44,6 +44,7 @@ func main() {
 	noteCache := []noteStore{}
 	noteURLs := []string{}
 	for _, element := range result {
+		log.Print("------------------------------------------------")
 		log.Printf("URL: %s", element[0])
 		u, err := url.Parse(element[0])
 		if err != nil {
