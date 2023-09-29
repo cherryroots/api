@@ -100,6 +100,8 @@ func main() {
 			}
 		}
 
+		log.Printf("grabbed %d notes", len(notes))
+
 		var match bool
 		for _, note := range notes {
 			// check if note url matches example and print id and url
@@ -165,7 +167,7 @@ func getUserNotes(userid string, notesCount int64) ([]note, error) {
 	var passes int64
 
 	for i := 0; i < int(totalPasses); i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 
 		var json = []byte{}
 		if int(totalPasses) == 1 {
