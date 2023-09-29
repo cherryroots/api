@@ -163,21 +163,21 @@ func getUserNotes(userid string, notesCount int64) ([]note, error) {
 		url := "https://blahaj.zone/api/users/notes"
 		var json = []byte{}
 		if int(totalPasses) == 1 {
-			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(notesCount) + `, "includeReplies": false}, "includeMyRenotes": false}`)
+			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(notesCount) + `}`)
 			passes += notesCount
 		}
 		if int(totalPasses) > 1 && i == 0 {
-			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `, "includeReplies": false, "includeMyRenotes": false}`)
+			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `}`)
 			passes += 100
 		}
 		if int(totalPasses) > 1 && i > 0 {
 			if i == int(totalPasses)-1 {
 				// last iteration, calculate remaining ntoes
 				remainingNotes := notesCount - passes
-				json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(remainingNotes) + `, "untilId": "` + noteList[len(noteList)-1].ID + `", "includeReplies": false, "includeMyRenotes": false}`)
+				json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(remainingNotes) + `, "untilId": "` + noteList[len(noteList)-1].ID + `"}`)
 				passes += remainingNotes
 			} else {
-				json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `, "untilId": "` + noteList[len(noteList)-1].ID + `", "includeReplies": false, "includeMyRenotes": false}`)
+				json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `, "untilId": "` + noteList[len(noteList)-1].ID + `"}`)
 				passes += 100
 			}
 		}
