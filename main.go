@@ -25,6 +25,11 @@ type noteStore struct {
 	Notes    []note
 }
 
+var (
+	// The URL of the API endpoint.
+	apiURL = "https://blahaj.zone/api"
+)
+
 // main is the entry point of the Go program.
 //
 // It reads the contents of a file called "input.txt" in the same directory.
@@ -59,25 +64,26 @@ func main() {
 			log.Fatal(err)
 		}
 		if id == "" {
-			log.Printf("No match for %s", element[0])
+			log.Printf("no match for %s", element[0])
 			continue
 		}
-		log.Printf("userID: %s, notesCount: %d", id, notesCount)
+		log.Printf("userID: %s, notes: %d", id, notesCount)
 
 		var notes []note
 		// if noteCache is empty get notes
 		if len(noteCache) == 0 {
-			log.Print("Getting notes...")
+			log.Print("getting notes...")
 			notes, err = getUserNotes(id, notesCount)
 			if err != nil {
 				log.Fatal(err)
 			}
+			noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 		} else {
 			// check if note is in cache
 			var match bool
 			for _, note := range noteCache {
 				if note.Username == id {
-					log.Print("Found in cache")
+					log.Print("found in cache")
 					notes = note.Notes
 					match = true
 					break
@@ -85,14 +91,14 @@ func main() {
 			}
 			// if not in cache get notes
 			if !match {
-				log.Print("Not in cache, getting notes...")
+				log.Print("not in cache, getting notes...")
 				notes, err = getUserNotes(id, notesCount)
 				if err != nil {
 					log.Fatal(err)
 				}
+				noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 			}
 		}
-		noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 
 		var match bool
 		for _, note := range notes {
@@ -107,9 +113,9 @@ func main() {
 			}
 		}
 		if !match {
-			saveURL := "No match for " + element[0]
+			saveURL := "no match for " + element[0]
 			noteURLs = append(noteURLs, saveURL)
-			log.Printf("No match for found...")
+			log.Printf("no match found...")
 		}
 	}
 	err = os.WriteFile("output.txt", []byte(strings.Join(noteURLs, "\n")), 0644)
@@ -129,9 +135,9 @@ func main() {
 // - notesCount: The count of notes for the user.
 // - error: The error that occurred during the API call.
 func getUserID(username string, host string) (string, int64, error) {
-	url := "https://blahaj.zone/api/users/show"
+	domain := apiURL + "/users/show"
 	json := []byte(`{"username": "` + username + `", "host": "` + host + `"}`)
-	body, err := postAPI(url, string(json))
+	body, err := postAPI(domain, string(json))
 	if err != nil {
 		return "", 0, err
 	}
@@ -160,7 +166,7 @@ func getUserNotes(userid string, notesCount int64) ([]note, error) {
 
 	for i := 0; i < int(totalPasses); i++ {
 		time.Sleep(1 * time.Second)
-		url := "https://blahaj.zone/api/users/notes"
+
 		var json = []byte{}
 		if int(totalPasses) == 1 {
 			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(notesCount) + `}`)
@@ -182,7 +188,8 @@ func getUserNotes(userid string, notesCount int64) ([]note, error) {
 			}
 		}
 
-		body, err := postAPI(url, string(json))
+		domain := apiURL + "/users/notes"
+		body, err := postAPI(domain, string(json))
 		if err != nil {
 			return noteList, err
 		}
