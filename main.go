@@ -58,6 +58,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		if id == "" {
+			log.Printf("No match for %s", element[0])
+			continue
+		}
 		log.Printf("userID: %s, notesCount: %d", id, notesCount)
 
 		var notes []note
@@ -68,24 +72,27 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 		} else {
+			// check if note is in cache
+			var match bool
 			for _, note := range noteCache {
 				if note.Username == id {
 					log.Print("Found in cache")
 					notes = note.Notes
-					break
-				} else {
-					log.Print("Not in cache, getting notes...")
-					notes, err = getUserNotes(id, notesCount)
-					if err != nil {
-						log.Fatal(err)
-					}
-					noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
+					match = true
 					break
 				}
 			}
+			// if not in cache get notes
+			if !match {
+				log.Print("Not in cache, getting notes...")
+				notes, err = getUserNotes(id, notesCount)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
+		noteCache = append(noteCache, noteStore{Username: id, Notes: notes})
 
 		var match bool
 		for _, note := range notes {
@@ -156,22 +163,31 @@ func getUserNotes(userid string, notesCount int64) ([]note, error) {
 		url := "https://blahaj.zone/api/users/notes"
 		var json = []byte{}
 		if int(totalPasses) == 1 {
-			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(notesCount) + `}`)
+			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(notesCount) + `, "includeReplies": false}, "includeMyRenotes": false}`)
 			passes += notesCount
 		}
 		if int(totalPasses) > 1 && i == 0 {
-			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `}`)
+			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `, "includeReplies": false, "includeMyRenotes": false}`)
 			passes += 100
 		}
 		if int(totalPasses) > 1 && i > 0 {
-			// get last id in notesList
-			lastID := noteList[len(noteList)-1].ID
-			json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(notesCount-passes) + `", "sinceId": "` + lastID + `"}`)
-			passes += notesCount - passes
+			if i == int(totalPasses)-1 {
+				// last iteration, calculate remaining ntoes
+				remainingNotes := notesCount - passes
+				json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(remainingNotes) + `, "untilId": "` + noteList[len(noteList)-1].ID + `", "includeReplies": false, "includeMyRenotes": false}`)
+				passes += remainingNotes
+			} else {
+				json = []byte(`{"userId": "` + userid + `", "limit": ` + fmt.Sprint(100) + `, "untilId": "` + noteList[len(noteList)-1].ID + `", "includeReplies": false, "includeMyRenotes": false}`)
+				passes += 100
+			}
 		}
+
 		body, err := postAPI(url, string(json))
 		if err != nil {
 			return noteList, err
+		}
+		if body == "[]" {
+			return noteList, nil
 		}
 
 		jsonArray := gjson.Parse(string(body)).Array()
